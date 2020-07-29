@@ -1,12 +1,13 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField, HiddenField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from flaskblog.models import User
 
 
 allowed_format = ['jpeg', 'jpg', 'png', 'svg']
+
 
 class RegistrationForm(FlaskForm):
     username = StringField(
@@ -99,6 +100,7 @@ class PostForm(FlaskForm):
 
     submit = SubmitField('Post')
 
+
 class PostRayForm(FlaskForm):
     picture = FileField(
         'Upload Ray Picture',
@@ -106,3 +108,11 @@ class PostRayForm(FlaskForm):
     )
 
     submit = SubmitField('Predict')
+
+
+class UpdateUserType(FlaskForm):
+    user_id = HiddenField("id")
+    user_type = SelectField("", choices=[(
+        'Admin', 'Admin'), ('Doctor', 'Doctor'), ('Patient', 'Patient')])
+    submit = SubmitField('Update')
+

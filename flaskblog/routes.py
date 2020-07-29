@@ -3,7 +3,7 @@ import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, PostRayForm
+from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm, PostRayForm, UpdateUserType
 from flaskblog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -142,26 +142,26 @@ def post(post_id):
     return render_template('post.html', title=post.title, post=post)
 
 
-@app.route('/post/<int:post_id>/update', methods=['GET', 'POST'])
-@login_required
-def update_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
-        abort(403)
-    form = PostForm()
-    if form.validate_on_submit():
-        post.title = form.title.data
-        post.content = form.content.data
-        db.session.commit()
-        flash('Your post has been updated!', 'success')
-        return redirect(url_for('post', post_id=post.id))
-    elif request.method == 'GET':
-        form.title.data = post.title
-        form.content.data = post.content
-    return render_template(
-        'create_post.html',
-        title='Update Post', form=form, legend='Update post'
-    )
+# @app.route('/post/<int:post_id>/update', methods=['GET', 'POST'])
+# @login_required
+# def update_post(post_id):
+#     post = Post.query.get_or_404(post_id)
+#     if post.author != current_user:
+#         abort(403)
+#     form = PostForm()
+#     if form.validate_on_submit():
+#         post.title = form.title.data
+#         post.content = form.content.data
+#         db.session.commit()
+#         flash('Your post has been updated!', 'success')
+#         return redirect(url_for('post', post_id=post.id))
+#     elif request.method == 'GET':
+#         form.title.data = post.title
+#         form.content.data = post.content
+#     return render_template(
+#         'create_post.html',
+#         title='Update Post', form=form, legend='Update post'
+#     )
 
 
 @app.route('/post/<int:post_id>/delete', methods=['POST'])
@@ -211,3 +211,26 @@ def new_ray():
     return render_template(
         'create_ray_post.html',
         title='predict ray', form=form, legend='Upload your ray')
+
+@app.route('/users', methods=['GET', 'POST'])
+@login_required
+def get_users():
+    if current_user.user_type != "Admin":
+        abort(403)
+    return render_template(
+        'users.html',
+        title='users',
+        users=users_all,
+        legend="update users"
+    )
+    
+@app.route('/user/type/<int:id>', methods=['GET', 'POST'])  
+@login_required  
+def update_user_id(id):
+    if current_user.user_type != "Admin":
+        abort(403)
+    value = request.form['type']
+    user = User.query.get(id)
+    user.user_type = value
+    db.session.commit()
+    return redirect(url_for('index'))
