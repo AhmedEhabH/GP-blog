@@ -5,3 +5,6 @@ flask-sqlalchemy
 flask-bcrypt
 flask-login
 Pillow
+tensorflow
+keras
+opencv-python
