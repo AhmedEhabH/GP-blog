@@ -28,8 +28,9 @@ def index():
 
 
 @app.route('/about')
+@login_required
 def about():
-    return render_template('about.html', title='About')
+    return render_template('about.html', title='About', user=current_user)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -106,7 +107,7 @@ def account():
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
-        flash('Your account has benn updated', 'success')
+        flash('Your account has been updated', 'success')
         return redirect(url_for('account'))
     elif request.method == 'GET':
         form.username.data = current_user.username
@@ -116,52 +117,10 @@ def account():
     return render_template('account.html', title='Account', image_file=image_file, form=form)
 
 
-@app.route('/post/new', methods=['GET', 'POST'])
-@login_required
-def new_post():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(
-            title=form.title.data,
-            content=form.content.data,
-            author=current_user
-        )
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post has been created!', 'success')
-        return redirect(url_for('index'))
-    return render_template(
-        'create_post.html',
-        title='New Post', form=form, legend='New Post'
-    )
-
-
 @app.route('/post/<int:post_id>')
 def post(post_id):
     post = Post.query.get_or_404(post_id)
     return render_template('post.html', title=post.title, post=post)
-
-
-# @app.route('/post/<int:post_id>/update', methods=['GET', 'POST'])
-# @login_required
-# def update_post(post_id):
-#     post = Post.query.get_or_404(post_id)
-#     if post.author != current_user:
-#         abort(403)
-#     form = PostForm()
-#     if form.validate_on_submit():
-#         post.title = form.title.data
-#         post.content = form.content.data
-#         db.session.commit()
-#         flash('Your post has been updated!', 'success')
-#         return redirect(url_for('post', post_id=post.id))
-#     elif request.method == 'GET':
-#         form.title.data = post.title
-#         form.content.data = post.content
-#     return render_template(
-#         'create_post.html',
-#         title='Update Post', form=form, legend='Update post'
-#     )
 
 
 @app.route('/post/<int:post_id>/delete', methods=['POST'])
@@ -170,6 +129,11 @@ def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     if post.author != current_user:
         abort(403)
+    try:
+        os.remove(os.path.join(app.root_path, 'static/profile_pics/x_rays', post.content))
+    except:
+        print(f"Failed to delete image {post.content}")
+    
     db.session.delete(post)
     db.session.commit()
     flash("Your post has been deleted!", 'success')
@@ -177,7 +141,10 @@ def delete_post(post_id):
 
 
 @app.route("/user/<string:username>")
+@login_required
 def user_posts(username):
+    if not (current_user.user_type in ['Admin', 'Doctor']) and current_user.username != username:
+        abort(403)
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
     posts = Post.query.filter_by(author=user)\
@@ -217,6 +184,7 @@ def new_ray():
 def get_users():
     if current_user.user_type != "Admin":
         abort(403)
+    users_all = User.query.all()
     return render_template(
         'users.html',
         title='users',
