@@ -182,7 +182,7 @@ def new_ray():
 @app.route('/users', methods=['GET', 'POST'])
 @login_required
 def get_users():
-    if current_user.user_type != "Admin":
+    if current_user.user_type not in ['Admin', 'Doctor']:
         abort(403)
     users_all = User.query.all()
     return render_template(
