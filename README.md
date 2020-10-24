@@ -3,7 +3,7 @@ Build blog using flask
 
 ## to run project
 1. install requirements
-    > `pip install -r req.txt`<br>
+    > `pip install -r requirements.txt`<br>
 
 2. open python shell with this path and run this commands
     > `from flaskblog import db`<br>
